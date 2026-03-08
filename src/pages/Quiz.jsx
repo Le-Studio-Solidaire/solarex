@@ -73,7 +73,6 @@ const Quiz = () => {
     'SSUAP',
     'Secours Routier',
     'Opérations Diverses',
-    'Gestion Opérationnelle',
     'Matériel & Équipements',
   ];
 
