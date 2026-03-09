@@ -17,13 +17,13 @@ const Premium = () => {
     { icon: <Crown className="w-5 h-5" />, text: 'Accès à tous les quiz premium' },
   ];
 
-  const handleCheckout = async () => {
-    // TODO: Integrate Stripe Checkout
-    // This will redirect to Stripe's hosted payment page
-    // After payment, Stripe webhook → Edge Function → activate premium
-    window.alert(
-      'Paiement Stripe en cours d\'intégration.\nLe lien de paiement sera bientôt disponible.'
-    );
+  const handleCheckout = () => {
+    const stripeUrl = new URL('https://buy.stripe.com/4gM7sK6jS05o8Pq50j1Fe00');
+    // Pass user email to prefill Stripe checkout
+    if (user?.email) {
+      stripeUrl.searchParams.set('prefilled_email', user.email);
+    }
+    window.location.href = stripeUrl.toString();
   };
 
   if (profile?.is_premium) {
