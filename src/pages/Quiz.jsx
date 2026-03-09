@@ -1,8 +1,11 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import {
   Play,
   RotateCcw,
@@ -14,6 +17,7 @@ import {
   Flame,
   Flag,
   Send,
+  Lock,
 } from 'lucide-react';
 import { quizData } from '@/data/quizData';
 
@@ -39,6 +43,8 @@ const shuffleQuestionAnswers = (q) => {
 
 const Quiz = () => {
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+  const isPremium = profile?.is_premium === true;
 
   // --- States --- //
   const [gameState, setGameState] = React.useState('setup');
@@ -54,6 +60,7 @@ const Quiz = () => {
   const [reportSubject, setReportSubject] = React.useState('');
   const [reportMessage, setReportMessage] = React.useState('');
   const [isSubmittingReport, setIsSubmittingReport] = React.useState(false);
+  const [streak, setStreak] = React.useState(0);
 
   // Ces deux hooks DOIVENT être dans le composant
   const [usedIds, setUsedIds] = React.useState(new Set());
@@ -76,9 +83,22 @@ const Quiz = () => {
     'Matériel & Équipements',
   ];
 
+  // Free users: only SSUAP questions (first 100)
+  // Premium users: all questions
+  const FREE_SSUAP_IDS = new Set(
+    quizData.filter((q) => q.theme === 'SSUAP').slice(0, 100).map((q) => q.id)
+  );
+
   const getFilteredQuestions = () => {
-    if (selectedTheme === 'all') return quizData;
-    return quizData.filter((q) => q.theme === selectedTheme);
+    let pool = quizData;
+
+    // Gate: non-premium users only get the free 100 SSUAP questions
+    if (!isPremium) {
+      pool = quizData.filter((q) => FREE_SSUAP_IDS.has(q.id));
+    }
+
+    if (selectedTheme === 'all') return pool;
+    return pool.filter((q) => q.theme === selectedTheme);
   };
 
   const startQuiz = () => {
@@ -144,6 +164,11 @@ const Quiz = () => {
     }
   };
 
+  // Points by difficulty
+  const POINTS_MAP = { easy: 1, medium: 2, hard: 3 };
+  const STREAK_BONUS = 5;
+  const STREAK_THRESHOLD = 10;
+
   const handleAnswer = (answerIndex) => {
     if (answered || !currentQuestion) return;
 
@@ -153,7 +178,29 @@ const Quiz = () => {
     const correct = answerIndex === currentQuestion.correctAnswer;
     setIsCorrect(correct);
 
-    const newScore = correct ? score + 2 : score - 3;
+    let pointsEarned = 0;
+    let newStreak = streak;
+
+    if (correct) {
+      const difficulty = currentQuestion.difficulty || 'medium';
+      pointsEarned = POINTS_MAP[difficulty] || 2;
+      newStreak = streak + 1;
+
+      // Streak bonus every 10 correct in a row
+      if (newStreak > 0 && newStreak % STREAK_THRESHOLD === 0) {
+        pointsEarned += STREAK_BONUS;
+        toast({
+          title: `🔥 Série de ${newStreak} !`,
+          description: `+${STREAK_BONUS} pts bonus pour ta caserne !`,
+        });
+      }
+    } else {
+      newStreak = 0;
+    }
+
+    setStreak(newStreak);
+
+    const newScore = score + pointsEarned;
     const newCount = questionCount + 1;
 
     setScore(newScore);
@@ -161,6 +208,18 @@ const Quiz = () => {
 
     localStorage.setItem('quiz-score', newScore.toString());
     localStorage.setItem('quiz-count', newCount.toString());
+
+    // Record answer to Supabase for premium users
+    if (isPremium && supabase && user) {
+      supabase.rpc('record_answer', {
+        p_user_id: user.id,
+        p_question_id: currentQuestion.id,
+        p_is_correct: correct,
+        p_points: pointsEarned,
+      }).then(({ error }) => {
+        if (error) console.error('Failed to record answer:', error.message);
+      });
+    }
 
     if (mode === 'test' && newCount >= 100) {
       setGameState('finished');
@@ -303,11 +362,26 @@ const Quiz = () => {
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   {themes.map((theme) => (
-                    <option key={theme} value={theme}>
+                    <option key={theme} value={theme} disabled={!isPremium && theme !== 'all' && theme !== 'SSUAP'}>
                       {theme === 'all' ? 'Tous les thèmes' : theme}
+                      {!isPremium && theme !== 'all' && theme !== 'SSUAP' ? ' 🔒' : ''}
                     </option>
                   ))}
                 </select>
+                {!isPremium && (
+                  <div className="mt-3 p-3 bg-slate-900/50 rounded-lg border border-slate-700">
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                      <Lock className="w-4 h-4 text-red-500 shrink-0" />
+                      <span>
+                        Quiz gratuit : 100 questions SSUAP.{' '}
+                        <Link to="/inscription" className="text-red-500 hover:underline font-semibold">
+                          Passe Premium (10€/an)
+                        </Link>{' '}
+                        pour 650+ questions et la compétition casernes.
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="bg-slate-900/50 rounded-lg p-4 flex items-center justify-between">
@@ -474,12 +548,14 @@ const Quiz = () => {
                         {isCorrect ? (
                           <>
                             <CheckCircle2 className="w-5 h-5 text-green-500" />
-                            <span className="font-semibold text-green-500">Bonne réponse ! +2 pts</span>
+                            <span className="font-semibold text-green-500">
+                              Bonne réponse ! +{POINTS_MAP[currentQuestion.difficulty || 'medium'] || 2} pt{(POINTS_MAP[currentQuestion.difficulty || 'medium'] || 2) > 1 ? 's' : ''}
+                            </span>
                           </>
                         ) : (
                           <>
                             <XCircle className="w-5 h-5 text-red-500" />
-                            <span className="font-semibold text-red-500">Mauvaise réponse ! -3 pts</span>
+                            <span className="font-semibold text-red-500">Mauvaise réponse</span>
                           </>
                         )}
                       </div>

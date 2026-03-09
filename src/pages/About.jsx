@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 const About = () => {
   return <>
       <Helmet>
-        <title>À propos | SOLAREX SP</title>
-        <meta name="description" content="Découvrez Quiz Pompier, outil pédagogique d'entraînement au secourisme pour sapeurs-pompiers. Mission, objectifs et avertissements." />
+        <title>À propos | SOLAREX — Le Codex du Soleil</title>
+        <meta name="description" content="SOLAREX : quiz et compétition entre casernes pour sapeurs-pompiers. Découvrez notre mission, nos valeurs et notre modèle." />
       </Helmet>
 
       <div className="container mx-auto px-4 py-12">
@@ -18,7 +18,7 @@ const About = () => {
         opacity: 1,
         y: 0
       }} className="max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center">À propos de SOLAREX SP</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center">À propos de SOLAREX</h1>
 
           <div className="space-y-8">
             <section className="bg-slate-800/50 border border-slate-700 rounded-lg p-8">
@@ -26,26 +26,18 @@ const About = () => {
                 <Target className="w-8 h-8 text-red-500 shrink-0" />
                 <div>
                   <h2 className="text-2xl font-bold mb-3">Notre Mission</h2>
-                  <p className="text-slate-300 leading-relaxed">SOLAREX SP est un outil pédagogique gratuit conçu pour aider les sapeurs-pompiers volontaires et professionnels à réviser leurs connaissances. Notre objectif est de faciliter l'apprentissage théorique grâce à des QCM basés sur les documents officiels (GDO, GTO, RETEX).</p>
+                  <p className="text-slate-300 leading-relaxed">SOLAREX — Le Codex du Soleil — est une plateforme de quiz et de compétition entre casernes pour sapeurs-pompiers. Notre mission : renforcer les connaissances théoriques tout en créant une dynamique collective entre centres de secours, grâce à plus de 650 questions basées sur les documents officiels (GDO, GTO, RETEX).</p>
                 </div>
               </div>
             </section>
 
             <section className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-8 text-center">
-              <h2 className="text-2xl font-bold mb-3">Soutenir le projet</h2>
-              <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
-                SOLAREX SP est porté par l'association <span className="font-semibold">Le Studio Solidaire</span>.
-                Vos dons permettent d'héberger, maintenir et améliorer l'outil pour toute la communauté.
-              </p>
-              <Button asChild size="lg" className="bg-red-500 hover:bg-red-600 text-lg px-8">
-                <a
-                  href="https://www.helloasso.com/associations/le-studio-solidaire/formulaires/1"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Faire un don sur HelloAsso
-                </a>
-              </Button>
+              <h2 className="text-2xl font-bold mb-3">Le modèle SOLAREX</h2>
+              <div className="text-slate-300 max-w-2xl mx-auto space-y-3 text-left">
+                <p><span className="font-semibold text-white">Gratuit :</span> Quiz découverte de 100 questions SSUAP + accès complet aux ressources GDO/GTO/RETEX.</p>
+                <p><span className="font-semibold text-white">Premium (10€/an) :</span> 650+ questions, 7 thèmes, tous niveaux, compétition entre casernes, classement national, historique et stats personnalisées.</p>
+                <p className="text-sm text-slate-400">Moins de 1€/mois pour soutenir ta formation et celle de ta caserne.</p>
+              </div>
             </section>
 
             <section className="bg-slate-800/50 border border-slate-700 rounded-lg p-8">
@@ -91,7 +83,7 @@ const About = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-white mb-1">Accessibilité</p>
-                      <p>Outil 100% gratuit, accessible à tous les sapeurs-pompiers.</p>
+                      <p>Quiz gratuit pour découvrir, Premium à 10€/an pour tout débloquer.</p>
                     </div>
                     <div>
                       <p className="font-semibold text-white mb-1">Fiabilité</p>
@@ -99,7 +91,7 @@ const About = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-white mb-1">Confidentialité</p>
-                      <p>Vos données restent sur votre appareil, aucun tracking personnel.</p>
+                      <p>Données sécurisées, authentification Supabase, paiement Stripe.</p>
                     </div>
                   </div>
                 </div>
@@ -113,7 +105,7 @@ const About = () => {
                   <h2 className="text-2xl font-bold mb-3 text-red-500">Avertissement Important</h2>
                   <div className="space-y-3 text-slate-300">
                     <p className="font-semibold">
-                      SOLAREX SP est un outil d'entraînement complémentaire et ne se substitue en aucun cas à :
+                      SOLAREX est un outil d'entraînement complémentaire et ne se substitue en aucun cas à :
                     </p>
                     <ul className="space-y-2">
                       <li className="flex items-start gap-2">

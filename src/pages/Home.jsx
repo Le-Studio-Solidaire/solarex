@@ -1,39 +1,68 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { getRandomResourceLink } from '@/data/resourceLinks';
-import { CheckCircle2, Zap, Target, BookOpen, TrendingUp, Shield } from 'lucide-react';
+import {
+  CheckCircle2,
+  Zap,
+  Target,
+  BookOpen,
+  TrendingUp,
+  Shield,
+  Trophy,
+  Users,
+  Crown,
+  MapPin,
+  Flame,
+} from 'lucide-react';
 
 const Home = () => {
+  const { profile } = useAuth();
+  const [topCasernes, setTopCasernes] = useState([]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from('casernes')
+      .select('id, name, department, sdis, total_points, member_count')
+      .order('total_points', { ascending: false })
+      .limit(3)
+      .then(({ data }) => {
+        if (data) setTopCasernes(data);
+      });
+  }, []);
+
   const benefits = [
     {
       icon: <Zap className="w-6 h-6" />,
-      title: 'Corrigé immédiat',
-      description: 'Feedback instantané avec lien direct vers GDO/GTO/RETEX pour réviser',
+      title: 'Compétition casernes',
+      description: 'Chaque bonne réponse rapporte des points à ta caserne. Monte au classement national !',
     },
     {
       icon: <Target className="w-6 h-6" />,
       title: 'Modes d\'entraînement',
-      description: 'Mode Infini pour réviser sans limite ou Test de 100 questions',
+      description: 'Mode Infini, Test de 100 questions, filtrage par thème et difficulté.',
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
       title: 'Suivi personnalisé',
-      description: 'Score en temps réel et identification des thèmes à renforcer',
+      description: 'Score, stats par thème, progression — tout synchronisé dans le cloud.',
     },
     {
       icon: <Shield className="w-6 h-6" />,
-      title: 'Fonctionne hors-ligne',
-      description: 'Interface mise en cache pour réviser partout, même sans connexion',
+      title: '650+ questions',
+      description: '7 thèmes (SSUAP, Incendie, Doctrine…), 3 niveaux de difficulté, corrigés détaillés.',
     },
   ];
 
   const steps = [
-    { number: '1', title: 'Choisis ton mode', description: 'Infini ou Test de 100 questions' },
-    { number: '2', title: 'Filtre par thème', description: 'DOCTRINE, Incendie, SSUAP, etc.' },
-    { number: '3', title: 'Révise efficacement', description: 'Feedback + ressources à chaque question' },
+    { number: '1', title: 'Teste le quiz gratuit', description: '100 questions SSUAP pour découvrir' },
+    { number: '2', title: 'Inscris ta caserne', description: 'Choisis ta caserne et passe Premium (10€/an)' },
+    { number: '3', title: 'Monte au classement', description: 'Chaque bonne réponse rapporte des points !' },
   ];
 
   const testimonials = [
@@ -69,7 +98,7 @@ const Home = () => {
     },
     {
       question: 'C\'est gratuit ?',
-      answer: 'Oui, cet outil est 100% gratuit et conçu pour aider la communauté des sapeurs-pompiers.',
+      answer: 'Le quiz découverte (100 questions SSUAP) est gratuit. Pour accéder aux 650+ questions et participer à la compétition casernes : 10€/an, soit moins de 1€/mois.',
     },
     {
       question: 'Puis-je proposer des questions ?',
@@ -84,10 +113,10 @@ const Home = () => {
   return (
     <>
       <Helmet>
-        <title>Quiz Pompier — Secourisme | Révise le secourisme pompier en 5 minutes par jour</title>
+        <title>SOLAREX — Le Codex du Soleil | Compétition quiz entre casernes de sapeurs-pompiers</title>
         <meta
           name="description"
-          content="Outil d'entraînement au secourisme pour sapeurs-pompiers volontaires et professionnels. QCM, modes d'entraînement, liens vers GDO/GTO/RETEX. Gratuit et hors-ligne."
+          content="SOLAREX : quiz et compétition entre casernes pour sapeurs-pompiers. 650+ questions, classement national, 10€/an. Fais monter ta caserne !"
         />
       </Helmet>
 
@@ -99,31 +128,25 @@ const Home = () => {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-              Révise la théorie pompier,
+              Le Codex du Soleil
               <br />
-              5 minutes par jour
+              <span className="text-3xl md:text-5xl">Compétition entre casernes</span>
             </h1>
             <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-              Entraîne-toi avec des QCM infinie, des liens directs vers les documents officiels, et des lectures aléatoires.
+              Entraîne-toi avec 650+ questions, fais gagner des points à ta caserne, et monte au classement national des sapeurs-pompiers.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button asChild size="lg" className="bg-red-500 hover:bg-red-600 text-lg px-8">
                 <Link to="/app">Lancer le quiz</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-lg px-8">
-                <Link to="/ressources">Voir les ressources</Link>
+                <Link to="/classement">Voir le classement</Link>
               </Button>
-              <Button
-                size="lg"
-                className="bg-orange-500 hover:bg-orange-600 text-lg px-8"
-                onClick={() => {
-                  const url = getRandomResourceLink();
-                  if (!url) return;
-                  window.open(url, '_blank', 'noopener,noreferrer');
-                }}
-              >
-                Lecture aléatoire
-              </Button>
+              {!profile?.is_premium && (
+                <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-lg px-8">
+                  <Link to="/inscription">S'inscrire — 10€/an</Link>
+                </Button>
+              )}
             </div>
           </motion.div>
 
@@ -184,7 +207,7 @@ const Home = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Pourquoi choisir Quiz Pompier ?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Pourquoi choisir SOLAREX ?</h2>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -219,27 +242,62 @@ const Home = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-8"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Soutenir Solarex SP</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              <Trophy className="inline w-8 h-8 text-yellow-500 mr-2 -mt-1" />
+              Top 3 Casernes
+            </h2>
             <p className="text-slate-300 max-w-2xl mx-auto">
-              Solarex SP est un projet porté par l'association <span className="font-semibold">Le Studio Solidaire</span>.
-              Vos dons permettent d'héberger, maintenir et enrichir l'outil pour toute la communauté.
-              Les dons sont collectés via HelloAsso sur la page de l'association.
+              Le classement est en temps réel. Chaque bonne réponse compte !
             </p>
           </motion.div>
 
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-6 md:p-8 text-center">
-              <p className="text-slate-300 mb-6">
-                Chaque contribution compte. Merci de soutenir l'initiative pour qu'elle reste gratuite et accessible.
-              </p>
-              <Button asChild size="lg" className="bg-red-500 hover:bg-red-600 text-lg px-8">
-                <a
-                  href="https://www.helloasso.com/associations/le-studio-solidaire/formulaires/1"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Faire un don sur HelloAsso
-                </a>
+          <div className="max-w-2xl mx-auto">
+            {topCasernes.length > 0 ? (
+              <div className="space-y-3 mb-6">
+                {topCasernes.map((caserne, index) => {
+                  const medals = [
+                    { icon: <Crown className="w-6 h-6 text-yellow-400" />, bg: 'border-yellow-500/50 bg-yellow-500/5' },
+                    { icon: <Crown className="w-6 h-6 text-slate-300" />, bg: 'border-slate-400/50 bg-slate-400/5' },
+                    { icon: <Crown className="w-6 h-6 text-orange-400" />, bg: 'border-orange-500/50 bg-orange-500/5' },
+                  ];
+                  return (
+                    <motion.div
+                      key={caserne.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`flex items-center gap-4 p-4 rounded-lg border-2 ${medals[index].bg}`}
+                    >
+                      <div className="shrink-0">{medals[index].icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{caserne.name}</p>
+                        <div className="flex items-center gap-3 text-sm text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> {caserne.sdis || caserne.department}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3" /> {caserne.member_count} membre{caserne.member_count !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-2xl font-bold text-red-500">{caserne.total_points.toLocaleString()}</p>
+                        <p className="text-xs text-slate-400">points</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 text-center mb-6">
+                <Trophy className="w-12 h-12 text-yellow-500/50 mx-auto mb-3" />
+                <p className="text-slate-400">Le classement apparaîtra dès les premières inscriptions.</p>
+              </div>
+            )}
+            <div className="text-center">
+              <Button asChild variant="outline">
+                <Link to="/classement">Voir le classement complet</Link>
               </Button>
             </div>
           </div>
@@ -284,13 +342,20 @@ const Home = () => {
             transition={{ duration: 0.6 }}
             className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-lg p-8 md:p-12 text-center"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Prêt à réviser ?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Prêt à défendre ta caserne ?</h2>
             <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-              Commence dès maintenant et améliore tes connaissances en secourisme pompier
+              Lance le quiz gratuit maintenant, ou inscris-toi pour participer à la compétition nationale
             </p>
-            <Button asChild size="lg" className="bg-red-500 hover:bg-red-600 text-lg px-8">
-              <Link to="/app">Lancer le quiz maintenant</Link>
-            </Button>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button asChild size="lg" className="bg-red-500 hover:bg-red-600 text-lg px-8">
+                <Link to="/app">Quiz gratuit (100 questions)</Link>
+              </Button>
+              {!profile?.is_premium && (
+                <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-lg px-8">
+                  <Link to="/inscription">Rejoindre la compétition — 10€/an</Link>
+                </Button>
+              )}
+            </div>
           </motion.div>
         </section>
       </div>
